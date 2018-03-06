@@ -35,6 +35,9 @@ jobs:
       - run: pwd && ls -lsrt -a
       - run: env
 
+      - run: echo $AWS_SECRET_ACCESS_KEY
+      - run: echo $AWS_ACCESS_KEY_ID 
+
       - save_cache:
           paths:
             - ~/.m2
@@ -42,11 +45,25 @@ jobs:
         
       # run tests!
       - run: mvn install
+        #      - run: cd 
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+           - ./
+                  #            - ./target/my-app-1.0-SNAPSHOT.war
+                  #            - ./.elasticbeanstalk
+      
+
+
 
   deploy:
     docker:
       - image: circleci/openjdk:8-jdk
+    attach_workspace:
+      at : /home/circleci/project/
     steps:
+      - attach_workspace:
+          at: /home/circleci/project
       - run: curl -O https://bootstrap.pypa.io/get-pip.py
       - run: python get-pip.py --user
       - run: echo "export PATH=/home/circleci/.local/bin/:$PATH" > ~/.python_path
@@ -55,8 +72,10 @@ jobs:
       - run: source ~/.python_path && aws --version
       - run: source ~/.python_path && eb --version
       - run: env && pwd && ls -lsrt -a
-      - run: cat .elasticbeanstalk/config.yml 
-      - run: source ~/.python_path && eb deploy cognitiveServer-env
+      - run: cat .elasticbeanstalk/config.yml
+      - run: echo $AWS_ACCESS_KEY_ID
+      - run: echo $AWS_SECRET_ACCESS_KEY
+      - run: source ~/.python_path && eb deploy cognitiveServer-prd-env
    
 
 workflows:
